@@ -1,0 +1,14 @@
+[package]
+name = "joi2011ho"
+version = "0.1.0"
+edition = "2018"
+
+# dependencies added to new project
+[dependencies]
+proconio = "*"
+memoise = "*"
+tuple = "0.5.1"
+
+[profile.release]
+lto = true
+panic = 'abort'

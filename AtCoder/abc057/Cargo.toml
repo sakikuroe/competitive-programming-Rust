@@ -1,0 +1,15 @@
+[package]
+name = "abc057"
+version = "0.1.0"
+edition = "2018"
+
+# dependencies added to new project
+[dependencies]
+proconio = "*"
+memoise = "*"
+ndarray = "*"
+nalgebra = "*"
+
+[profile.release]
+lto = true
+panic = 'abort'
