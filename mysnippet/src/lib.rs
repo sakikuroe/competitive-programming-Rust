@@ -308,7 +308,6 @@ struct UnionFind {
         parent: Vec<usize>,
         rank: Vec<usize>,
         size: Vec<usize>,
-        n: usize,
 }
 #[snippet(name = "unionfind")]
 impl UnionFind {
@@ -320,14 +319,10 @@ impl UnionFind {
                         parent,
                         rank,
                         size,
-                        n: number_of_nodes,
                 }
         }
-        fn is_root(&mut self, x: usize) -> bool {
-                self.parent[x] == x
-        }
         fn root(&mut self, x: usize) -> usize {
-                if self.is_root(x) {
+                if self.parent[x] == x {
                         x
                 } else {
                         self.parent[x] = self.root(self.parent[x]);
@@ -336,7 +331,7 @@ impl UnionFind {
         }
         fn size(&mut self, x: usize) -> usize {
                 let a = self.root(x);
-                if self.is_root(a) {
+                if self.parent[a] == a {
                         self.size[a]
                 } else {
                         self.size(a)
@@ -357,14 +352,6 @@ impl UnionFind {
                                 }
                         }
                 }
-        }
-        fn same(&mut self, x: usize, y: usize) -> bool {
-                self.root(x) == self.root(y)
-        }
-        fn clear(&mut self) {
-                self.parent = (0..self.n).collect::<Vec<usize>>();
-                self.rank = vec![0; self.n];
-                let size = vec![1; self.n];
         }
 }
 
@@ -674,7 +661,7 @@ fn kruskal(edge_list: &Vec<Edge>, v_size: usize, number_of_connected_components:
                 if cnt == number_of_connected_components {
                         break;
                 }
-                if !unionfind.same(src, dst) {
+                if unionfind.root(src) != unionfind.root(dst) {
                         unionfind.unite(src, dst);
                         path_weight_sum += weight;
                         cnt += 1;
