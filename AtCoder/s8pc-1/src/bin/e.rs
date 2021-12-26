@@ -1,72 +1,143 @@
 use proconio::input;
+use proconio::marker::Usize1;
 use std::collections::VecDeque;
+use std::ops;
 
 const MOD: usize = 1_000_000_007;
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Mint {
+    value: usize,
+}
+impl Mint {
+    pub fn new(value: usize) -> Mint {
+        Mint {
+            value: value % MOD,
+        }
+    }
+    #[allow(dead_code)]
+    pub fn value(&self) -> usize {
+        self.value
+    }
+    pub fn pow(&self, n: usize) -> Mint {
+        let mut res = Mint::new(1);
+        let mut n = n;
+        let mut x = self.clone();
+        while n > 0 {
+            if n & 1 == 1 {
+                res *= x;
+            }
+            x = x * x;
+            n = n >> 1;
+        }
 
-fn pow_mod(n: usize, m: usize) -> usize {
-    if m == 0 {
-        1
-    } else if m % 2 == 0 {
-        pow_mod(n * n % MOD, m / 2)
-    } else {
-        n * pow_mod(n, m - 1) % MOD
+        res
+    }
+    pub fn inverse(&self) -> Mint {
+        self.pow(MOD - 2)
+    }
+    pub fn factorial(&self) -> Mint {
+        if self.value == 0 {
+            Mint::new(1)
+        } else {
+            let mut res = Mint::new(1);
+            for i in 1..=self.value {
+                res *= Mint::new(i);
+            }
+            res
+        }
     }
 }
-
-fn solve(a_list: &Vec<usize>, c_list: &VecDeque<usize>) -> usize {
-    // distance_sum_list[i] := 街1から街(i + 1)までの距離
-    let sum_list: Vec<usize> = {
-        // distance_list[i] := 街(i + 1)と街(i + 2)を結ぶ道路の長さ
-        let distance_list: Vec<usize> = {
-            let mut distance_list = vec![];
-            for i in 1..a_list.len() {
-                distance_list.push(pow_mod(a_list[i - 1], a_list[i]));
-            }
-            distance_list
-        };
-
-        let mut sum_list = vec![0; a_list.len()];
-        for i in 0..a_list.len() - 1 {
-            sum_list[i + 1] = sum_list[i] + distance_list[i];
+impl ops::Add for Mint {
+    type Output = Mint;
+    fn add(self, other: Self) -> Self {
+        let mut value = self.value + other.value;
+        if value >= MOD {
+            value -= MOD;
         }
-        sum_list
-    };
-
-    let ans = {
-        let mut ans: usize = 0;
-        // sum_listでの累積和でクエリに対する答えを高速に計算
-        for i in 0..(c_list.len() - 1) {
-            ans += (sum_list[c_list[i + 1] - 1] as isize - sum_list[c_list[i] - 1] as isize).abs()
-                as usize;
-            ans %= MOD;
+        Mint {
+            value,
         }
-
-        ans % MOD
-    };
-
-    ans
+    }
 }
-
-fn output(ans: usize) {
-    println!("{}", ans);
+impl ops::Sub for Mint {
+    type Output = Mint;
+    fn sub(self, other: Self) -> Self {
+        if self.value >= other.value {
+            Mint {
+                value: self.value - other.value,
+            }
+        } else {
+            Mint {
+                value: (self.value + MOD) - other.value,
+            }
+        }
+    }
+}
+impl ops::Mul for Mint {
+    type Output = Mint;
+    fn mul(self, other: Self) -> Self {
+        Mint {
+            value: self.value * other.value % MOD,
+        }
+    }
+}
+impl ops::Div for Mint {
+    type Output = Mint;
+    fn div(self, other: Self) -> Self {
+        Mint {
+            value: (self * other.inverse()).value % MOD,
+        }
+    }
+}
+impl ops::AddAssign for Mint {
+    fn add_assign(&mut self, other: Self) {
+        self.value = (*self + other).value;
+    }
+}
+impl ops::SubAssign for Mint {
+    fn sub_assign(&mut self, other: Self) {
+        self.value = (*self - other).value;
+    }
+}
+impl ops::MulAssign for Mint {
+    fn mul_assign(&mut self, other: Self) {
+        self.value = (*self * other).value;
+    }
+}
+impl ops::DivAssign for Mint {
+    fn div_assign(&mut self, other: Self) {
+        self.value = (*self / other).value;
+    }
 }
 
 fn main() {
     // Input
     input! {
         n: usize, q: usize,
-        a_list: [usize; n],
-        mut c_list: [usize; q],
+        a: [usize; n],
+        c: [Usize1; q],
     }
 
-    // Initialize
-    let mut c_list: VecDeque<usize> = c_list.into_iter().collect();
-    c_list.push_front(1);
-    c_list.push_back(1);
-
     // Solve
-    let ans: usize = solve(&a_list, &c_list);
+    let mut c: VecDeque<usize> = c.into_iter().collect();
+    c.push_front(0);
+    c.push_back(0);
 
+    let s = {
+        let mut res = vec![Mint::new(0); n];
+        for i in 0..n - 1 {
+            res[i + 1] = res[i] + Mint::new(a[i]).pow(a[i+1]);
+        }
+        res
+    };
+
+    let mut ans = Mint::new(0);
+    for i in 0..q+1 {
+        let a = std::cmp::min(c[i], c[i+1]);
+        let b = std::cmp::max(c[i], c[i+1]);
+        ans += s[b] - s[a];
+    }
+    
     // Output
-    output(ans);
+    println!("{}", ans.value());
 }
