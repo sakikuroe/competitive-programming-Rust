@@ -1,129 +1,134 @@
 use proconio::input;
 use std::ops;
 const MOD: usize = 1_000_000_007;
-#[derive(Clone, Debug)]
-struct Mint {
-        a: usize,
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Mint {
+    value: usize,
 }
 impl Mint {
-        fn new(a: usize) -> Mint {
-                Mint {
-                        a: a % MOD,
-                }
+    pub fn new(value: usize) -> Mint {
+        Mint {
+            value: value % MOD,
         }
-        fn mod_pow(&self, n: usize) -> Mint {
-                if n == 0 {
-                        Mint::new(1)
-                } else if n % 2 == 0 {
-                        Mint::new((self.clone() * self.clone()).mod_pow(n / 2).a % MOD)
-                } else {
-                        Mint::new((self.clone() * self.clone().mod_pow(n - 1)).a % MOD)
-                }
+    }
+    #[allow(dead_code)]
+    pub fn value(&self) -> usize {
+        self.value
+    }
+    pub fn pow(&self, n: usize) -> Mint {
+        let mut res = Mint::new(1);
+        let mut n = n;
+        let mut x = self.clone();
+        while n > 0 {
+            if n & 1 == 1 {
+                res *= x;
+            }
+            x = x * x;
+            n = n >> 1;
         }
-        fn mod_inverse(&self) -> Mint {
-                self.mod_pow(MOD - 2)
+
+        res
+    }
+    pub fn inverse(&self) -> Mint {
+        self.pow(MOD - 2)
+    }
+    pub fn factorial(&self) -> Mint {
+        if self.value == 0 {
+            Mint::new(1)
+        } else {
+            let mut res = Mint::new(1);
+            for i in 1..=self.value {
+                res *= Mint::new(i);
+            }
+            res
         }
-        fn mod_factorial(&self) -> Mint {
-                if self.a == 0 {
-                        Mint::new(1)
-                } else {
-                        let mut res = Mint::new(1);
-                        for i in 1..=self.a {
-                                res *= Mint::new(i);
-                        }
-                        res
-                }
-        }
+    }
 }
 impl ops::Add for Mint {
-        type Output = Mint;
-        fn add(self, other: Self) -> Self {
-                let mut a = self.a + other.a;
-                if a >= MOD {
-                        a -= MOD;
-                }
-                Mint {
-                        a,
-                }
+    type Output = Mint;
+    fn add(self, other: Self) -> Self {
+        let mut value = self.value + other.value;
+        if value >= MOD {
+            value -= MOD;
         }
+        Mint {
+            value,
+        }
+    }
 }
 impl ops::Sub for Mint {
-        type Output = Mint;
-        fn sub(self, other: Self) -> Self {
-                if self.a >= other.a {
-                        Mint {
-                                a: self.a - other.a,
-                        }
-                } else {
-                        Mint {
-                                a: (self.a + MOD) - other.a,
-                        }
-                }
+    type Output = Mint;
+    fn sub(self, other: Self) -> Self {
+        if self.value >= other.value {
+            Mint {
+                value: self.value - other.value,
+            }
+        } else {
+            Mint {
+                value: (self.value + MOD) - other.value,
+            }
         }
+    }
 }
 impl ops::Mul for Mint {
-        type Output = Mint;
-        fn mul(self, other: Self) -> Self {
-                Mint {
-                        a: self.a * other.a % MOD,
-                }
+    type Output = Mint;
+    fn mul(self, other: Self) -> Self {
+        Mint {
+            value: self.value * other.value % MOD,
         }
+    }
 }
 impl ops::Div for Mint {
-        type Output = Mint;
-        fn div(self, other: Self) -> Self {
-                Mint {
-                        a: (self * other.mod_inverse()).a % MOD,
-                }
+    type Output = Mint;
+    fn div(self, other: Self) -> Self {
+        Mint {
+            value: (self * other.inverse()).value % MOD,
         }
+    }
 }
 impl ops::AddAssign for Mint {
-        fn add_assign(&mut self, other: Self) {
-                self.a = (self.clone() + other).a;
-        }
+    fn add_assign(&mut self, other: Self) {
+        self.value = (*self + other).value;
+    }
 }
 impl ops::SubAssign for Mint {
-        fn sub_assign(&mut self, other: Self) {
-                self.a = (self.clone() - other).a;
-        }
+    fn sub_assign(&mut self, other: Self) {
+        self.value = (*self - other).value;
+    }
 }
 impl ops::MulAssign for Mint {
-        fn mul_assign(&mut self, other: Self) {
-                self.a = (self.clone() * other).a;
-        }
+    fn mul_assign(&mut self, other: Self) {
+        self.value = (*self * other).value;
+    }
 }
 impl ops::DivAssign for Mint {
-        fn div_assign(&mut self, other: Self) {
-                self.a = (self.clone() / other).a;
-        }
-}
-fn mod_permutation(n: Mint, r: Mint) -> Mint {
-        let mut res = Mint::new(1);
-        for i in 0..r.a {
-                res *= Mint::new(n.a - i);
-        }
-        res
-}
-fn mod_combination(n: Mint, r: Mint) -> Mint {
-        r.mod_factorial().mod_inverse() * mod_permutation(n, r)
+    fn div_assign(&mut self, other: Self) {
+        self.value = (*self / other).value;
+    }
 }
 
-fn solve(n: usize, k: usize) -> usize {
-        // (n - 1)個の球とk個の棒を一列に並び替える方法に等しい
-        // 高校の数学Aの場合分けの問題
-        mod_combination(Mint::new(n + k - 1), Mint::new(k)).a
+pub fn permutation(n: Mint, r: Mint) -> Mint {
+    let mut res = Mint::new(1);
+    for i in 0..r.value() {
+        res *= Mint::new(n.value() - i);
+    }
+    res
+}
+
+pub fn combination(n: Mint, r: Mint) -> Mint {
+    r.factorial().inverse() * permutation(n, r)
 }
 
 fn main() {
-        // Input
-        input! {
-            n: usize,
-            k: usize,
-        }
+    // Input
+    input! {
+        n: usize,
+        k: usize,
+    }
 
-        // Solve
-        let ans: usize = solve(n, k);
+    // Solve
+    let ans = combination(Mint::new(n + k - 1), Mint::new(k)).value();
 
-        // Output
-        println!("{}", ans);
+    // Output
+    println!("{}", ans);
 }
