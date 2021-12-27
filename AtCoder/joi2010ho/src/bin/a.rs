@@ -12,7 +12,10 @@ fn main() {
     let sum = {
         let mut res = vec![0; n];
         for i in 0..(n - 1) {
-            res[i + 1] = res[i] + s[i];
+            res[i + 1] = s[i];
+        }
+        for i in 0..(n - 1) {
+            res[i + 1] += res[i];
         }
         res
     };
