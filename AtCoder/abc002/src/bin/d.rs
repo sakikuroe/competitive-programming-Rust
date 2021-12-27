@@ -1,36 +1,38 @@
 use proconio::input;
-use std::cmp;
+use proconio::marker::Usize1;
 use std::collections::HashSet;
+
 fn main() {
-        // Input
-        input! {
-                n: usize, m: usize,
-                xy_list: [(usize, usize); m],
+    // Input
+    input! {
+        n: usize, m: usize,
+        xy: [(Usize1, Usize1); m],
+    }
+
+    // Solve
+    let mut ans = vec![];
+    let set = {
+        let mut res = HashSet::new();
+        for (x, y) in xy {
+            res.insert((x, y));
         }
+        res
+    };
 
-        // Solve
-        let mut ans = 0;
-        let xy_list = xy_list
-                .into_iter()
-                .map(|(x, y)| (x - 1, y - 1))
-                .collect::<HashSet<(usize, usize)>>();
-
-        for bit in 1..(1 << n) {
-                let mut flag = true;
-                for i in 0..n {
-                        for j in i + 1..n {
-                                if (bit >> i) & 1 == 1 && (bit >> j) & 1 == 1 {
-                                        if !xy_list.contains(&(i, j)) {
-                                                flag = false;
-                                        }
-                                }
-                        }
+    for bit in 0..(1 << n) as usize  {
+        let mut f = vec![];
+        for i in 0..n {
+            for j in i + 1..n {
+                if bit & (1 << i) != 0 && bit & (1 << j) != 0 {
+                    f.push(set.contains(&(i, j)));
                 }
-                if flag {
-                        ans = cmp::max(ans, (bit as u64).count_ones());
-                }
+            }
         }
+        if f.into_iter().fold(true, |x, y| x & y) {
+            ans.push(bit.count_ones());
+        }
+    }
 
-        // Output
-        println!("{}", ans);
+    // Output
+    println!("{}", ans.into_iter().max().unwrap());
 }
