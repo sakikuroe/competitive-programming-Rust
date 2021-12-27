@@ -14,15 +14,18 @@ fn main() {
         let mut res = vec![vec![[0; 3]; n + 1]; m + 1];
         for i in 0..m {
             for j in 0..n {
-                for k in 0..3 {
-                    res[i + 1][j + 1][k] += res[i][j + 1][k] + res[i + 1][j][k] - res[i][j][k];
-                }
-
                 match board[i][j] {
                     'J' => res[i + 1][j + 1][0] += 1,
                     'O' => res[i + 1][j + 1][1] += 1,
                     'I' => res[i + 1][j + 1][2] += 1,
                     _ => (),
+                }
+            }
+        }
+        for i in 0..m {
+            for j in 0..n {
+                for k in 0..3 {
+                    res[i + 1][j + 1][k] += res[i][j + 1][k] + res[i + 1][j][k] - res[i][j][k];
                 }
             }
         }
